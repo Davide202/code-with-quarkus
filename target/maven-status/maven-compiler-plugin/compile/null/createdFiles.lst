@@ -1,0 +1,13 @@
+org\acme\UserResource.class
+org\acme\dto\AccountDTO.class
+org\acme\dto\UserDTO.class
+org\acme\mapper\AbstractMapper.class
+org\acme\entity\AccountEntity.class
+org\acme\mapper\AccountMapper.class
+org\acme\mapper\Mapper.class
+org\acme\service\UserService.class
+org\acme\dto\BaseDTO.class
+org\acme\GreetingResource.class
+org\acme\entity\UserEntity.class
+org\acme\entity\BaseEntity.class
+org\acme\mapper\UserMapper.class

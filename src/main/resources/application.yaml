@@ -1,0 +1,10 @@
+quarkus:
+  hibernate-orm:
+    schema-management:
+      strategy: drop-and-create
+  datasource:
+    db-kind: mysql
+    username: root
+    password: root
+    reactive:
+      url: mysql://127.0.0.1:3306/quarkus
