@@ -8,3 +8,13 @@ quarkus:
     password: root
     reactive:
       url: mysql://127.0.0.1:3306/quarkus
+
+#    devservices:
+#      enabled: true
+#      show-logs: true
+#      volumes:
+#        "/local/test/data": /var/lib/mysql
+#
+#testcontainers:
+#  reuse:
+#    enable: true

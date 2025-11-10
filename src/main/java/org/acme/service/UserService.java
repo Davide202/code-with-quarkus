@@ -14,6 +14,8 @@ import org.acme.mapper.UserMapper;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+
+import org.hibernate.HibernateException;
 import org.jboss.logging.Logger;
 
 
@@ -37,11 +39,12 @@ public class UserService {
 
 
     @WithTransaction
-    public Uni<UserDTO> insert(UserDTO userDTO) throws ExecutionException, InterruptedException {
+    public Uni<UserDTO> insert(UserDTO userDTO) {
         UserEntity userEntity = userMapper.fromDtoToEntity(userDTO);
         log.info("Saving " + userDTO.toString());
         //AccountEntity accountEntity = userEntity.getAccount();
-        return userEntity.getAccount().persist()
+        try{
+            return userEntity.getAccount().persist()
                 .onItem()
                 .transform(panacheEntityBase -> {
                     AccountEntity baseEntity = (AccountEntity) panacheEntityBase;
@@ -56,6 +59,10 @@ public class UserService {
                 })
                 .onItem()
                 .transform(x -> userMapper.fromEntityToDto((UserEntity) x));
+        }catch (HibernateException e){
+            log.error(e.getClass().getSimpleName() + " :: " + e.getMessage());
+            throw e;
+        }
     }
 
 

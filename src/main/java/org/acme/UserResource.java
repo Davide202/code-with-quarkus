@@ -26,13 +26,6 @@ public class UserResource {
 
     @POST
     public Uni<UserDTO> insertUser(UserDTO userDTO) throws ExecutionException, InterruptedException {
-//        AccountDTO account = new AccountDTO();
-//        account.setUsername(UUID.randomUUID().toString());
-//        account.setPassword(UUID.randomUUID().toString());
-//        UserDTO userDTO = new UserDTO();
-//        userDTO.setAccount(account);
-//        userDTO.setNome(UUID.randomUUID().toString());
-//        userDTO.setCognome(UUID.randomUUID().toString());
         return userService.insert(userDTO);
     }
 }
