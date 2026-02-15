@@ -1,0 +1,15 @@
+meta {
+  name: GET ALL
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/user
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

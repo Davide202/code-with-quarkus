@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "CODE-WITH-QUARKUS",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
