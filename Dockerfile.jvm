@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.23 AS build
+FROM eclipse-temurin:21-jdk-jammy AS build
 
 USER root
 WORKDIR /app
@@ -10,22 +10,27 @@ COPY src ./src
 RUN chmod +x mvnw
 # Fix line endings for Windows users
 RUN sed -i 's/\r$//' mvnw
-RUN microdnf install -y tar gzip
+# Install tar and gzip (needed for Maven Wrapper) if not present, though Temurin usually has them.
+# Using apt-get since base is Ubuntu/Debian
+RUN apt-get update && apt-get install -y tar gzip
+
 RUN --mount=type=cache,target=/root/.m2 ./mvnw clean package -DskipTests
 
-FROM registry.access.redhat.com/ubi9/openjdk-21:1.23
+FROM eclipse-temurin:21-jre-jammy
 
 ENV LANGUAGE='en_US:en'
 
 # We make four distinct layers so if there are application changes the library layers can be re-used
-COPY --from=build --chown=185 /app/target/quarkus-app/lib/ /deployments/lib/
-COPY --from=build --chown=185 /app/target/quarkus-app/*.jar /deployments/
-COPY --from=build --chown=185 /app/target/quarkus-app/app/ /deployments/app/
-COPY --from=build --chown=185 /app/target/quarkus-app/quarkus/ /deployments/quarkus/
+COPY --from=build --chown=1001 /app/target/quarkus-app/lib/ /deployments/lib/
+COPY --from=build --chown=1001 /app/target/quarkus-app/*.jar /deployments/
+COPY --from=build --chown=1001 /app/target/quarkus-app/app/ /deployments/app/
+COPY --from=build --chown=1001 /app/target/quarkus-app/quarkus/ /deployments/quarkus/
 
 EXPOSE 8080
-USER 185
+# Use a non-root user (1001 is common in these images, or we can create one)
+USER 1001
+
 ENV JAVA_OPTS_APPEND="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
 
-ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]
+ENTRYPOINT [ "java", "-jar", "/deployments/quarkus-run.jar" ]
