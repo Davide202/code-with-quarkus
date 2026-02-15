@@ -5,8 +5,8 @@ services:
     environment:
       - MYSQL_DATABASE=quarkus
       - MYSQL_ROOT_PASSWORD=root
-    ports:
-      - 33306:3306
+    #    ports:
+    #      - 33306:3306
     volumes:
       - data:/var/lib/mysql
       - ./src/main/resources/ddl.sql:/docker-entrypoint-initdb.d/ddl.sql
@@ -18,7 +18,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: src/main/docker/Dockerfile.jvm
+      dockerfile: Dockerfile.jvm
     container_name: code-with-quarkus
     environment:
       - QUARKUS_DATASOURCE_REACTIVE_URL=mysql://mysql:3306/quarkus
