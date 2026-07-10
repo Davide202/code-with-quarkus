@@ -1,0 +1,23 @@
+[
+  {
+    "method": "GET",
+    "uri": "/api/users",
+    "responseBody": [
+      { "id": 1, "name": "Mario Rossi" },
+      { "id": 2, "name": "Luigi Verdi" }
+    ]
+  },
+  {
+    "method": "POST",
+    "uri": "/api/orders",
+    "responseBody": {
+      "status": "created",
+      "orderId": 98765
+    }
+  },
+  {
+    "method": "DELETE",
+    "uri": "/api/item/42",
+    "responseBody": "Item deleted successfully"
+  }
+]

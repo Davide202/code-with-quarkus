@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  dynamic-mock:
+    image: davidedinnocente/dynamic-mock:1.0.0
+    container_name: quarkus-mock-api
+    ports:
+      - "8080:8080"
+    environment:
+      # Indichiamo all'app dove trovare il file all'interno del container
+      - MOCK_ROUTES_FILE=/app/config/routes.json
+    volumes:
+      # Montiamo il file routes.json dal tuo host al path previsto nel container in sola lettura (ro)
+      - ./routes.json:/app/config/routes.json:ro
+    restart: unless-stopped
