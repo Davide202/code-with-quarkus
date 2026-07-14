@@ -1,0 +1,135 @@
+[
+  {
+    "method": ["GET", "POST"],
+    "uri": "/profile",
+    "responseBody": {
+      "username": "mock-admin",
+      "roles": ["ADMIN", "USER"],
+      "active": true
+    }
+  },
+  {
+    "method": "POST",
+    "uri": "/token",
+    "responseBody": {
+      "access_token": "mocked-jwt-token-12345",
+      "token_type": "Bearer",
+      "expires_in": 3600
+    }
+  },
+  {
+    "method": "GET",
+    "uri": "/mms/ifmb/configuration/contents/api/v1/contents/messageslibrary",
+    "responseBody": []
+  },
+  {
+    "method": "GET",
+    "uri": "/mms/ifmb/configuration/contents/api/v1/visualtemplates",
+    "responseBody": []
+  },
+  {
+    "method": "GET",
+    "uri": "/mms/ifmb/configuration/contents/api/v1/contents/visualcontents/servicedatacontents",
+    "responseBody": []
+  },
+  {
+    "method": "GET",
+    "uri": "/mms/ifmb/configuration/contents/api/v1/contents/visualcontents/digitalimagecontents",
+    "responseBody": []
+  },
+  {
+    "method": "GET",
+    "uri": "/mms/ifmb/configuration/contents/api/v1/contents/visualcontents/digitalvideocontents",
+    "responseBody": []
+  },
+    {
+      "method": ["GET", "POST"],
+      "uri": "/profile",
+      "responseBody": {
+        "username": "mock-admin",
+        "roles": ["ADMIN", "USER", "maas.provider.admin"],
+        "active": true
+      }
+    },
+    {
+      "method": "POST",
+      "uri": "/token",
+      "responseBody": {
+        "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJtb2NrLWFkbWluIiwicm9sZXMiOlsibWFhcy5wcm92aWRlci5hZG1pbiJdLCJleHAiOjI1MzQwMjMwMDc5OX0.dummy_signature_that_is_long_enough_for_parsing",
+        "token_type": "Bearer",
+        "expires_in": 3600
+      }
+    },
+    {
+      "method": "GET",
+      "uri": "/scaricomassivonap/v1/getNetexSnapshot",
+      "responseBody": {
+        "status": "OK",
+        "snapshotId": "snapshot-123"
+      }
+    },
+    {
+      "method": "POST",
+      "uri": "/gestioneviaggiservice/v3/viaggi/registraViaggio",
+      "responseBody": {
+        "tripId": "mock-trip-123",
+        "status": "REGISTERED"
+      }
+    },
+    {
+      "method": "PUT",
+      "uri": "/gestioneviaggiservice/v3/viaggi/aggiornaViaggio/123",
+      "responseBody": {
+        "tripId": "mock-trip-123",
+        "status": "UPDATED"
+      }
+    },
+    {
+      "method": "POST",
+      "uri": "/gestioneviaggiservice/v3/viaggi/terminaViaggio/123",
+      "responseBody": {
+        "tripId": "mock-trip-123",
+        "status": "TERMINATED"
+      }
+    },
+    {
+      "method": "GET",
+      "uri": "/mms/netexexport/service/api/v1/exports/vehiclejourney",
+      "responseBody": {
+        "exportId": "export-123",
+        "items": []
+      }
+    },
+    {
+      "method": "GET",
+      "uri": "/smm/serviceprovider/api/v1/operators",
+      "responseBody": [
+        {
+          "operatorId": "op-1",
+          "name": "Mocked Operator"
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "uri": "/smm/serviceprovider/api/v1/operators/op-1/dsrm/endpoint",
+      "responseBody": {
+        "endpointUrl": "http://dynamic-mock:8080/mocked-dsrm-endpoint"
+      }
+    },
+    {
+      "method": "GET",
+      "uri": "/ihbinm/servicestatus/api/v1/operators/informations/search",
+      "responseBody": {
+        "results": []
+      }
+    },
+    {
+      "method": "GET",
+      "uri": "/ihbcus/tripstatus/api/v1/trips/mock-trip-123",
+      "responseBody": {
+        "id": "mock-trip-123",
+        "status": "ONGOING"
+      }
+    }
+  ]

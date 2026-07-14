@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-@ApplicationScoped
+//@ApplicationScoped
 public class DynamicMockServer {
 
     private static final Logger LOG = Logger.getLogger(DynamicMockServer.class);

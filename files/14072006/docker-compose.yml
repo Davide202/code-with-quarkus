@@ -1,0 +1,255 @@
+services:
+  # 1. Database MariaDB
+  mariadb:
+    image: mariadb:10.11
+    container_name: mms-mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: Ihbinf-RooT745
+      MYSQL_DATABASE: parity
+    ports:
+      - "43306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Kafka (Immagine ufficiale Apache)
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: mms-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      #socket.request.max.bytes in server.properties
+      SOCKET_REQUEST_MAX_BYTES: 1000000000
+      KAFKA_SOCKET_REQUEST_MAX_BYTES: 1000000000
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+  # 2b. Script automatico per la creazione dei topic Kafka
+  kafka-init:
+    image: apache/kafka:3.7.0
+    container_name: mms-kafka-init
+    depends_on:
+      - kafka
+    # Esegue un loop in attesa che il broker Kafka sia pronto, poi crea il topic
+    volumes:
+      - ./init.cql:/init.cql:ro
+    command: |
+      bash -c "
+      echo 'In attesa che Kafka accetti connessioni...'
+      until /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list > /dev/null 2>&1; do
+        sleep 2
+      done
+      echo 'Kafka è pronto! Creazione dei topic in corso...'
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic tkt-mms-cua-evlout-transaction --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic ihbtkt-medialifecycle-evl-mediain --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic tkt-mms-cua-evlin-transaction --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic ihbtkt-customeractivity-evl-transactionin --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic fnd-dynamic-string-out --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic fnd-eventstream-default --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      # Topic in ingresso (Consumer)
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic ihbinf-infomobilityconfiguration-evl-visualtemplate --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic ihbinf-infomobilityconfiguration-evl-messagelibrarycontent --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      
+      # Topic in uscita (Producer)
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic pis-infomobilitydeliveryengine-evl-visualtemplate --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic pis-infomobilityconfiguration-evl-messagelibrarycontent --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic pis-infomobilitydeliveryengine-evl-serviceconfigupdate --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      
+      # Topic interni (Signal Ready/KeepAlive per l'application monitoring)
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic fnd-applicationmonitoring-evl-signalready --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic fnd-applicationmonitoring-evl-signalkeepalive --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic ihbcus-tripstatus-evl-trip --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic ihbinm-stdinterface-evl-dsrmresults --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+      echo 'Inizializzazione Kafka completata.'
+      "
+
+  # 3. Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: mms-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  # 3b. Script automatico per la creazione degli indici Elasticsearch
+  elasticsearch-init:
+    image: curlimages/curl:7.87.0
+    container_name: mms-elasticsearch-init
+    depends_on:
+      - elasticsearch
+    command: |
+      sh -c "
+      echo 'In attesa che Elasticsearch accetti connessioni...'
+      until curl -s http://elasticsearch:9200 > /dev/null; do
+        sleep 5
+      done
+      echo 'Elasticsearch è pronto! Creazione degli indici in corso...'
+      curl -s -X PUT http://elasticsearch:9200/ihbtkt-customeractivity-idx-transaction
+      curl -s -X PUT http://elasticsearch:9200/ihbtkt-customeractivity-idx-network
+      curl -s -X PUT http://elasticsearch:9200/ihbtkt-customeractivity-idx-listofticket
+      curl -s -X PUT http://elasticsearch:9200/ihbtkt-customeractivity-idx-ticket
+      curl -s -X PUT http://elasticsearch:9200/ihbtkt-medialifecycle-idx-media
+      curl -s -X PUT http://elasticsearch:9200/ihbtkt-medialifecycle-idx-list
+      echo 'Inizializzazione Elasticsearch completata con successo.'
+      "
+  # 4. Cassandra (Database Principale)
+  cassandra:
+    image: cassandra:4.1
+    container_name: mms-cassandra
+    environment:
+      CASSANDRA_CLUSTER_NAME: "MMSCluster"
+      CASSANDRA_DC: "datacenter1"
+      CASSANDRA_USER: "cassandra"
+      CASSANDRA_PASSWORD: "cassandra"
+      CASSANDRA_AUTHENTICATOR: "PasswordAuthenticator" # <-- AGGIUNGI QUESTA
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      # Verifica la salute eseguendo un comando CQL interno
+      test: [ "CMD", "cqlsh", "-u", "cassandra", "-p", "cassandra", "-e", "describe keyspaces" ]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  # 4b. Script automatico per la creazione del Keyspace Cassandra
+  cassandra-init:
+    image: cassandra:4.1
+    container_name: mms-cassandra-init
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - ./init.cql:/init.cql:ro
+    command:
+      - /bin/bash
+      - -c
+      - |
+        echo "In attesa che Cassandra sia pronto per le queries..."
+        sleep 10
+        cqlsh cassandra 9042 -u cassandra -p cassandra -f /init.cql
+        echo "Inizializzazione Cassandra completata con successo."
+
+  # 5. La tua Applicazione Quarkus
+  app:
+    build:
+      context: .
+      # Aggiorna il percorso del Dockerfile se necessario per l'API
+      dockerfile: api/src/main/docker/Dockerfile.native
+    image: api-dsrm:latest # Rinominata l'immagine
+    container_name: api-dsrm
+    ports:
+      - "8080:8080"
+    depends_on:
+      kafka:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
+      elasticsearch:
+        condition: service_started
+      elasticsearch-init:
+        condition: service_completed_successfully
+      cassandra:
+        condition: service_healthy
+      cassandra-init:
+        condition: service_completed_successfully
+      jaeger:
+        condition: service_started
+      dynamic-mock:
+        #condition: service_healthy
+        condition: service_started
+    # 1. PUNTIAMO AL NUOVO FILE ENV
+    env_file: "./dockercomposelocal.env"
+    environment:
+
+      # Observability (OpenTelemetry / Jaeger)
+      - DEPLOYMENT_LANE=quarkus
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - QUARKUS_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://jaeger:4317
+
+#      # 2. CASSANDRA COL NOME VARIABILE CORRETTO
+#      - MOOVA_IHBTKT_CUSTOMERACTIVITY_KS_CAD_CASSANDRA_USER=cassandra
+#      - MOOVA_IHBTKT_CUSTOMERACTIVITY_KS_CAD_CASSANDRA_PASSWORD=cassandra
+#      - MOOVA_IHBTKT_CUSTOMERACTIVITY_KS_CAD_CASSANDRA_HOST=cassandra
+#      - MOOVA_IHBTKT_CUSTOMERACTIVITY_KS_CAD_CASSANDRA_PORT=9042
+#      - MOOVA_IHBTKT_VIRTUALTICKETING_API_VIRTUALTICKETING_CASSANDRA_DATACENTER=datacenter1
+#
+#      # 3. ELASTICSEARCH FORZATO SUL CONTAINER LOCALE
+#      - MOOVA_IHBTKT_CUSTOMERACTIVITY_IDX_TRANSACTION_ELASTICSEARCH_HOST=elasticsearch
+#      - MOOVA_IHBTKT_CUSTOMERACTIVITY_IDX_TRANSACTION_ELASTICSEARCH_PORT=9200
+#      - MOOVA_IHBTKT_CUSTOMERACTIVITY_IDX_TRANSACTION_ELASTICSEARCH_SSL_VERIFY_PEER=false
+#      - MOOVA_IHBTKT_CUSTOMERACTIVITY_IDX_TRANSACTION_ELASTICSEARCH_SSL_VERIFY_HOST=false
+#
+#      # KAFKA (Producer)
+#      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+#      - MOOVA_IHBTKT_CUSTOMERACTIVITY_EVL_TRANSACTION_KAFKA_HOST=kafka:9092
+#      - MOOVA_IHBTKT_CUSTOMERACTIVITY_EVL_TRANSACTION_KAFKA_PRODUCER_SECURITY_PROTOCOL=PLAINTEXT
+#      - MOOVA_IHBTKT_CUSTOMERACTIVITY_EVL_TRANSACTION_KAFKA_PRODUCER_SASL_MECHANISM=
+#      - MOOVA_IHBTKT_CUSTOMERACTIVITY_EVL_TRANSACTION_KAFKA_PRODUCER_SASL_JAAS_CONFIG=
+
+      # Disabilitazioni di sicurezza / db locali
+      - QUARKUS_OIDC_TENANT_ENABLED=false
+
+  # 6. Jaeger (Collector OpenTelemetry)
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: mms-jaeger
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686" # Interfaccia Web di Jaeger
+      - "4317:4317" # Porta gRPC dove Quarkus invia i log (quella che ora va in "Connection refused")
+
+  dynamic-mock:
+    image: davidedinnocente/dynamic-mock:1.0.0
+    container_name: mms-mock-api
+    ports:
+      - "8082:8080"
+    environment:
+      # Indichiamo all'app dove trovare il file all'interno del container
+      - MOCK_ROUTES_FILE=/app/config/routes.json
+      - MOCK_TOKEN_REGEX=.*token.*
+      - MOCK_JWT_PRIVATE_KEY=MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDHqLTmnrRWErLs6OskUKErqG/ND5xOUkfFcTcAOpb2/GyP9bQgr43QcvXk1hG3/t826ovGHTLqvI57WjN7E25bR4yTvw9IO+JyzL244S7FPq6CGI/OdPosUlPC9LXi1GIzMAsrAznnHoBwW4lxh+syFd+ACyzmkKDIrBSducwkiAUR9qHQou9saXP5oPD5BOO8AJGeaPDf7GkxhrSpzMypfDniA0M4m0pPAXyk6XTVeQ9hfPHccV6rettexYgzYi6h7LS5haKhiR0n4bsks5H+GBECRWx+vE+uEtkDnVW0djlT7Bmf5+7peTXMGvM1oU2XzFN1JEc+qdeP8tMB5EbNAgMBAAECggEAD9OMGBN19N8GvwKdMF580WwIsAmf/fxbMz0sxdr0awUU1O9+H7DSw2EizojNKZeC2Zn2H5Y3xPAn34LFqGigpjcnH0df6ShSuaoIPZlfSU7VQJDnsKRIorlEPvoCA0Y1t4bZfRzEcFEpugj40t6aMo5AeRL0XvK8Gqll+UpdnSU616njV9SQ2f8ekNMEksC6Q3JGCl0bMngzz3pbt3BFDxoGPmUUMFxriFhoMdaxRoMPJO+IRbxnvNonYumho5FHGGbGyGDUuVrCV7v4sGJ+c+FgU4e+tTWYtqeCcXahnIyGzn1YQnpxSdJhKQWRrDSIX4W3wh/Jk1/9wzs81Si1+QKBgQDX5I02vixTWsEIlq5rlLG6p6SvGAuTxkQM+XgF03gqdE23aJsGVVyYNN42AjgMLo1XXeglCP1hjaiZxc9TPWtu+1pqAcMEZVxallDwLJUaqJDmaIvWaduWm03aEF326owvfrXzwYGXzeZ1XjJrajR5mxq/khp/5lngafdInD/fGQKBgQDswBuinXrG7iyj2LYxN+StIE6ndANtNfDFIhdWl788hdr8QTR/wQLePBgOBb7A8ABa2Sn2GKC7MGm8dX4Kr6OCK6Od3UKPzbmie/dHyI9W4LZk6hZRRzBepoikDF0imh+N4yZmM/I+C2fUomuP0VQWEDY8LqeMNeAaiT4gKSy/1QKBgDV+pVsOLk+NKk2lgJyZoJxek9jq/VtlglEws4PGDX1/ig5LNjaQijwQxYrea+Lg2hbu5uneW2KDxmYr9J5slqVOVO31d8wsDYFIw89vTJbpc9YTy6qaWlXsL5M8APyAy7GtFQrMRP9HfrZQW+/vxgbn3u3fFv/gJR8NQr/UL6NpAoGAKSZO51nV4EO/kI73Q+DCJ3FJGoPooI/SlIETa2Kew6dEY7n1pQroM7ZgO/e1qxVMCn5ac8LeFQsaJb6KNNNIaTSqkKLHkfUhAePoHBr5BxGxwiKJ1IC6IIlzkIfxnDULrP7BStxWi4AyANxmM64fnmIc+yLkzlMC67nVCYP+mi0CgYEAu4z674Zl4G8xW4EmOcUUoKkJkhYf+ZlwAzlWqWBkOknMeezU7WY8HSWSdCKhLAmxJ0APt15Oqd6OcbsuslKXrM+db22FSTAP7ADBwtwCII3ZEcpoGKoNMZrSsihbwZM7MdaYtHqk7fKYDBSQBy/HskPGXJkXea0j0pkMEw5D8Mc=
+    volumes:
+      # Montiamo il file routes.json dal tuo host al path previsto nel container in sola lettura (ro)
+      - ./routes.json:/app/config/routes.json:ro
+    restart: unless-stopped
+    #healthcheck:
+    #  # Usiamo wget in modalità "spider" (verifica solo che risponda 200 OK)
+    #  # Il tuo fallback sulla root '/' o qualsiasi path restituirà HTTP 200
+    #  test: [ "CMD-SHELL", "wget -q --spider http://localhost:8080/ || exit 1" ]
+    #  interval: 2s
+    #  timeout: 2s
+    #  retries: 15
+
+
+volumes:
+  mariadb_data:
+  kafka_data:
+  es_data:
+  cassandra_data:
+
+    #  mvn clean package  -Dnative  "-Dquarkus.native.native-image-xmx=8g" "-Dquarkus.native.container-build=true"
+    # docker compose up -d
+
