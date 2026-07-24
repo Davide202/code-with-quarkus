@@ -130,7 +130,7 @@ public class DynamicMockServerJWTs {
 
                 String jwt = dataToSign + "." + encodedSignature;
                 String responseBody = String.format("{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":36000}", jwt);
-
+                LOG.infof("Response Body: %s",responseBody);
                 rc.response()
                         .putHeader("Content-Type", "application/json")
                         .setStatusCode(200)
@@ -173,7 +173,7 @@ public class DynamicMockServerJWTs {
                                         objectMapper.writeValueAsString(endpoint.responseBody());
 
                                 router.route(method, routePath).handler(rc -> {
-                                    LOG.infof("✅ Match trovato per [%s] %s - Restituisco mock payload", rc.request().method(), rc.request().uri());
+                                    LOG.infof("✅ Match trovato per [%s] %s - Restituisco mock payload: %s", rc.request().method(), rc.request().uri(),responseBody);
                                     rc.response()
                                             .putHeader("Content-Type", "application/json")
                                             .setStatusCode(200)

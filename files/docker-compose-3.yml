@@ -72,9 +72,6 @@ services:
       # Topic interni (Signal Ready/KeepAlive per l'application monitoring)
       /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic fnd-applicationmonitoring-evl-signalready --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
       /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic fnd-applicationmonitoring-evl-signalkeepalive --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
-      
-      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic ihbcus-tripstatus-evl-trip --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
-      /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --topic ihbinm-stdinterface-evl-dsrmresults --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
       echo 'Inizializzazione Kafka completata.'
       "
 
@@ -157,10 +154,8 @@ services:
       context: .
       # Aggiorna il percorso del Dockerfile se necessario per l'API
       dockerfile: api/src/main/docker/Dockerfile.native
-      #no_cache: true
-    #image: my_quarkus_app:latest
-    pull_policy: build
-    container_name: my_quarkus_app
+    image: api-cntchmngcontents:latest # Rinominata l'immagine
+    container_name: api-cntchmngcontents
     ports:
       - "8080:8080"
     depends_on:
@@ -231,8 +226,6 @@ services:
     environment:
       # Indichiamo all'app dove trovare il file all'interno del container
       - MOCK_ROUTES_FILE=/app/config/routes.json
-      - MOCK_TOKEN_REGEX=.*token.*
-      - MOCK_JWT_PRIVATE_KEY=MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDnCyfMUx55lPYblev0u5WyW1tJxMHtoclaDPZiVXGjYjSnC6V3KuPfNQxAIm8+HF/W9zSs6ufVHTvFOIoKbsFQKxRHq3KbqiQ8hD3Q47Vt6bKS9VtBC9e6OgVggW4VbDYB/soRWhWc1y8+0hSJBw/wdJvHQu34K1B2UCXhOw3cYiWAaFo/KmpBbp9aU5EVDwT8Y1st+c729Pe+zcy2ONLRLFaAvszdkiQPQJhPgQPZsxMY5DE5t45rb+65Vs1Kl+dtr10JXOFkbAc3uBnTq3sG1s4PCDq1Z1IChluHJXo/xAj1wCUEoSC2uxN5sK46WitmQ3WBcGEdduNZHaR0TO6JAgMBAAECggEAKgrEH7CiU4JxNDzYNmzqBQ4NswM8PLcbcij4rpUYvB/TL/B1GBW0aHn5NDRv5K/6Gp5aNfr627NZnH441EQqJiHoq0/952iS9nYj336IFauYZJiEFfaHN2p2bwSuWPSbcUqBT54CX8tiW/6TYQnpcxps/Fnn/qg3GIhmFDGQSKE06T6uNokLabwXPceFsz/1d9YtwNx5Wdv+0A1uejTEgpuappKnR9Dj3hxXTk9Y/HILIxfk8BamHzu4fA7wu4dyknTYKXJzdcbmbgWcpN2ezUJOqcYLBET/sQHw3vtmHg6ZbaG09z10kNH9lcYJ2GFiN/t8e90WfUckYX7bTh+77wKBgQDxDD3LfOHWKMwc5oVGdtv4UhctCJAEaWqf0Z6b+z9hS8jXJ2tQ7Cm1GFamkUqQvWm3GS9qgIYPBu7V3e3+d1bml9PL9uPRA3i0eggrffa+bKXMH+84vO0YRVg4eLi+IhF8hdYIKZ3r2xzRsnjwfYDwpDWgY8o1855EGApF0JyGhwKBgQD1YAzRCwy9z4I8LGm4iuiDQwpBHywc9L6Rab0zuNVMvZ4z/JK3mW8jSLJ3NVlb1Ztsp2yP2upfzph69BY9uOvX01OP/hlCsQjfCaKbfuJOhi6l3KoHpE56OXrReWMVXUbiFX6H3iB6+P546NTwRZX+dhGOwyI0r9ECPpdXBOkWbwKBgC0iHKPwQxzlUKqMoyG5eaB6RmqhMs4Qqu03w5nzJj/if72BXP+u6HRHFVpk0/Bb9uJYrd8kJ3XC149l2X0O/U952CdVl/x3yO8J9mOmVz/6eeTJifI2tbIYsdcJC5ZWLK4DJTssB6y0vyWoZCqrZSwpovzgEmmdruGTGsFNuTEbAoGBAO/xStcoLP93aW0aKQ+Slie1aNOhfeua0Lc1ZRSsy7fNPGStuXLcETe5oPq9KnKJAQFQ/vH1KncheS3SfeVBbS6Rsgb+fQkgQQKJU38mpnoO8JK0o3fxjeQrTRSF1QRRQD1Ys3B9H9ngnkbxtzh1c2VvY1/tJQfMXWAKgMdRP/T1AoGAbCfkFTTheJPOrpYPETXcrhyzbdw7hv/rgJCo3xscvDKcTNQ0jaZx1OfSMPtsVueZg4HYwkpWyQxZt+lEf3lWYfFEKza1fIz0imNkacLRPxqMDR1b2RX4jWEhaOHM50c+VkICW9Z6ny8DoOb8jHLpNxAKHKpdrCm8+ve8P9gXn3o=
     volumes:
       # Montiamo il file routes.json dal tuo host al path previsto nel container in sola lettura (ro)
       - ./routes.json:/app/config/routes.json:ro
