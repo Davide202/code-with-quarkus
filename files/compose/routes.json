@@ -1,0 +1,64 @@
+[
+  {
+    "method": ["GET", "POST", "PUT", "DELETE"],
+    "uri": "/mms/common/touchpoint/configuration/api",
+    "responseBody": []
+  },
+  {
+    "method": ["GET", "POST"],
+    "uri": "/profile",
+    "responseBody": {
+      "username": "mock-admin",
+      "roles": ["ADMIN", "USER", "maas.provider.admin"],
+      "active": true
+    }
+  },
+  {
+    "method": ["GET", "POST", "PUT", "DELETE"],
+    "uri": "/ihbinl/servicestatus/api/servicestatus/*",
+    "responseBody": {
+      "status": "OK",
+      "message": "Mock response for Service Status API"
+    }
+  },
+  {
+    "method": ["GET", "POST", "PUT", "DELETE"],
+    "uri": "/ihbinl/freighttransport/api/freighttransport/*",
+    "responseBody": {
+      "status": "OK",
+      "message": "Mock response for Freight Transport API"
+    }
+  },
+  {
+    "method": ["GET", "POST", "PUT", "DELETE"],
+    "uri": "/ihbinl/efti/api/dataset/*",
+    "responseBody": {
+      "status": "OK",
+      "message": "Mock response for EFTI Dataset API"
+    }
+  },
+  {
+    "method": ["GET", "POST", "PUT", "DELETE"],
+    "uri": "/api/platform/*",
+    "responseBody": {
+      "status": "OK",
+      "message": "Mock response for eFTI Gateway Platform API"
+    }
+  },
+  {
+    "method": ["GET", "POST"],
+    "uri": "/profile-manager/*",
+    "responseBody": {
+      "status": "SUCCESS",
+      "data": []
+    }
+  },
+  {
+    "method": ["GET", "POST", "PUT"],
+    "uri": "/ihbpxf/nearrealtimenormalizer/journeylistpaxflow/api/*",
+    "responseBody": {
+      "status": "OK",
+      "message": "Mock response for Journey List Pax Flow API"
+    }
+  }
+]

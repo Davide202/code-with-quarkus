@@ -1,0 +1,61 @@
+# ==========================================
+# TRANSACTIONS & MEDIA
+# ==========================================
+tkt-mms-cua-evlout-transaction
+ihbtkt-medialifecycle-evl-mediain
+tkt-mms-cua-evlin-transaction
+ihbtkt-customeractivity-evl-transactionin
+
+# ==========================================
+# FND & CORE
+# ==========================================
+fnd-dynamic-string-out
+fnd-eventstream-default
+fnd-applicationmonitoring-evl-signalready
+fnd-applicationmonitoring-evl-signalkeepalive
+queuing.ai.application_logs.v1
+
+# ==========================================
+# CONFIGURATION & DELIVERY
+# ==========================================
+ihbinf-infomobilityconfiguration-evl-visualtemplate
+ihbinf-infomobilityconfiguration-evl-messagelibrarycontent
+pis-infomobilitydeliveryengine-evl-visualtemplate
+pis-infomobilityconfiguration-evl-messagelibrarycontent
+pis-infomobilitydeliveryengine-evl-serviceconfigupdate
+
+# ==========================================
+# INFOMOBILITY & TRIPS
+# ==========================================
+ihbcus-tripstatus-evl-trip
+ihbinm-stdinterface-evl-dsrmresults
+
+# ==========================================
+# ANNOUNCEMENT DATA
+# ==========================================
+pis-infomobilitydeliveryengine-evl-monitoredaudiomessage
+queuing.mms.announcementsstoppointstatus.v2
+queuing.es.announcementcommandresult.v1
+queuing.mms.announcementcommand.v1
+ihbinf-infomobilitystatus-evl-monitoredaudiomessagews
+ihbinf-infomobilitystatus-evl-announcementsstoppointstatusws
+ihbinf-infomobilitystatus-evl-announcementcommandresultws
+ihbinf-infomobilitystatus-evl-audiodeliveredjourney
+
+# ==========================================
+# NEAR REAL TIME NORMALIZER & PAX FLOW
+# ==========================================
+ihbpxf-nearrealtimenormalizer-evl-journeylistpaxflow
+
+# ==========================================
+# SERVICE STATUS (API)
+# ==========================================
+ihbinl-servicestatus-evl-servicestatus
+
+# ==========================================
+# SERVICE STATUS (PROCESSOR) - Nuovi topic
+# ==========================================
+ihbinl-freighttransport-evl-freighttransportout
+ihbinm-integratedmobilitystatus-evl-vehicleactivityout
+ihbinl-integratedservicebooking-evl-bookingout
+ihbinl-electroniccmr-evl-datasetout
